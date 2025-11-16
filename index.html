@@ -1,21 +1,53 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fluid Soccer — HTML5 Canvas</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluid Soccer Game</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="ui">
-    <div id="score">Player <span id="scoreP">0</span> — <span id="scoreAI">0</span> AI</div>
-    <div id="instructions">
-      Controls: <strong>W/A/S/D</strong> or <strong>Arrow keys</strong> to move • <strong>Space</strong> to kick
-      <span class="touch">• Touch to move • Tap ball to kick</span>
+
+  <!-- MAIN MENU -->
+  <div id="mainMenu" class="menu">
+    <h1>Fluid Soccer</h1>
+
+    <h2>Player Color</h2>
+    <div id="playerColorChoices" class="colorGrid"></div>
+
+    <h2>AI Color</h2>
+    <div id="aiColorChoices" class="colorGrid"></div>
+
+    <h2>Difficulty</h2>
+    <div id="difficultyChoices" class="difficultyGrid">
+      <button data-diff="easy">Easy</button>
+      <button data-diff="medium">Medium</button>
+      <button data-diff="hard">Hard</button>
     </div>
-    <button id="restart">Restart</button>
+
+    <button id="startMatchBtn" class="bigBtn">Start Match</button>
   </div>
+
+  <!-- PAUSE MENU -->
+  <div id="pauseMenu" class="menu hidden">
+    <h1>Paused</h1>
+    <button id="resumeBtn" class="bigBtn">Resume</button>
+    <button id="changeDifficultyBtn" class="bigBtn">Change Difficulty</button>
+    <button id="restartBtn" class="bigBtn">Restart Match</button>
+  </div>
+
+  <!-- GAME UI -->
+  <div id="ui" class="hidden">
+    <div id="scoreBoard">
+      <span>Player: <span id="scoreP">0</span></span>
+      <span>AI: <span id="scoreAI">0</span></span>
+    </div>
+    <button id="pauseBtn" class="pauseBtn">II</button>
+  </div>
+
+  <!-- GAME CANVAS -->
   <canvas id="game"></canvas>
+
   <script src="script.js"></script>
 </body>
 </html>
