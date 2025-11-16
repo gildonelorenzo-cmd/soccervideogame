@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fluid Soccer — HTML5 Canvas</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="ui">
+    <div id="score">Player <span id="scoreP">0</span> — <span id="scoreAI">0</span> AI</div>
+    <div id="instructions">
+      Controls: <strong>W/A/S/D</strong> or <strong>Arrow keys</strong> to move • <strong>Space</strong> to kick
+      <span class="touch">• Touch to move • Tap ball to kick</span>
+    </div>
+    <button id="restart">Restart</button>
+  </div>
+  <canvas id="game"></canvas>
+  <script src="script.js"></script>
+</body>
+</html>
