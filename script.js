@@ -43,7 +43,7 @@
   window.addEventListener('resize', updateWH);
 
   const settings = {
-    /* Slower movement & ball as requested */
+    /* Slower movement & ball */
     playerRadius: 16,
     playerMaxSpeed: 240,
     playerAccel: 1600,
@@ -52,7 +52,7 @@
     ballMaxSpeed: 820,
     ballFriction: 0.995,
     kickPower: 420,
-    aiSkill: 0.86,
+    aiSkill: 0.82,
     slowMotionOnKick: 0.95
   };
 
@@ -262,12 +262,10 @@
     ctx.beginPath();
     ctx.arc(0,0,b.radius,0,Math.PI*2);
     ctx.fillStyle=b.color;
-    ctx.fill();
 
     ctx.beginPath();
     ctx.arc(-b.radius*0.4,-b.radius*0.4,b.radius*0.5,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,0.12)';
-    ctx.fill();
 
     ctx.restore();
   }
@@ -530,27 +528,34 @@
     pauseMenu.classList.add('hidden');
   }
 
-  /* Difficulty Presets */
+  /* Difficulty Presets (IMPROVED — easy is much easier now) */
   function applyDifficulty(diff){
     selectedDifficulty = diff;
-    if(diff==='easy'){
-      settings.aiSkill = 0.62;
+
+    if(diff === 'easy'){
+      // AI very weak, slow, errors often
+      settings.aiSkill = 0.35;
       settings.playerMaxSpeed = 260;
-      settings.playerAccel = 1200;
-      settings.ballMaxSpeed = 620;
-      settings.kickPower = 360;
+      settings.playerAccel = 1500;
+
+      settings.ballMaxSpeed = 580;
+      settings.kickPower = 330;
     }
-    else if(diff==='medium'){
-      settings.aiSkill = 0.82;
+
+    else if(diff === 'medium'){
+      settings.aiSkill = 0.70;
       settings.playerMaxSpeed = 240;
       settings.playerAccel = 1600;
+
       settings.ballMaxSpeed = 820;
       settings.kickPower = 420;
     }
-    else {
-      settings.aiSkill = 0.95;
-      settings.playerMaxSpeed = 220;
+
+    else { // hard
+      settings.aiSkill = 0.92;
+      settings.playerMaxSpeed = 230;
       settings.playerAccel = 1900;
+
       settings.ballMaxSpeed = 980;
       settings.kickPower = 520;
     }
