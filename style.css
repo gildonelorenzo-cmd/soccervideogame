@@ -1,3 +1,4 @@
+/* ======== GLOBAL ======== */
 body {
   margin: 0;
   background: #0e402a;
@@ -13,7 +14,7 @@ body {
   touch-action: none;
 }
 
-/* ----- MENUS ----- */
+/* ======== MENUS ======== */
 .menu {
   position: absolute;
   inset: 0;
@@ -64,7 +65,7 @@ body {
   z-index: 5;
 }
 
-/* ----- COLOR SELECTOR ----- */
+/* ======== COLOR SELECTOR ======== */
 .colorGrid {
   display: grid;
   grid-template-columns: repeat(5, 40px);
@@ -84,7 +85,7 @@ body {
   border: 3px solid #fff;
 }
 
-/* ----- DIFFICULTY BUTTONS ----- */
+/* ======== DIFFICULTY BUTTONS ======== */
 .difficultyGrid button {
   padding: 10px 20px;
   margin: 5px;
