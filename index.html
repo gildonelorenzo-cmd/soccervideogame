@@ -151,18 +151,24 @@ body {
 
 <script>
 /* ============================================================
-   FLUID SOCCER JS — SINGLE-FILE VERSION
+   FLUID SOCCER JS — SINGLE-FILE VERSION (FIXED RESIZE BUG)
    ============================================================ */
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d', { alpha: false });
 
+/* FIXED RESIZE FUNCTION */
 function resize() {
   const ratio = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
+
   canvas.width = Math.floor(rect.width * ratio);
   canvas.height = Math.floor(rect.height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+  /* IMPORTANT FIX: update world width/height */
+  W = rect.width;
+  H = rect.height;
 }
 window.addEventListener('resize', resize);
 resize();
@@ -230,7 +236,7 @@ function buildColorGrid(container, selected, onSelect) {
   container.innerHTML = "";
   PALETTE.forEach(c => {
     const d = document.createElement("div");
-    d.className = "colorChoice" + (c === selected ? " selected" : "");
+    d.className = "colorChoice" + (c === selected ? "selected" : "");
     d.style.background = c;
     d.addEventListener("click", () => { onSelect(c); updateGrids(); });
     container.appendChild(d);
@@ -243,7 +249,9 @@ function updateGrids() {
   [...aiColorChoices.children]
     .forEach((el,i)=>el.classList.toggle("selected", PALETTE[i]===selectedAIColor));
   [...difficultyChoices.querySelectorAll("button")]
-    .forEach(b => b.style.outline = (b.dataset.diff===selectedDifficulty) ? "3px solid white" : "none");
+    .forEach(b => b.style.outline =
+      (b.dataset.diff===selectedDifficulty) ? "3px solid white" : "none"
+    );
 }
 
 buildColorGrid(playerColorChoices, selectedPlayerColor, c => selectedPlayerColor=c);
@@ -324,7 +332,7 @@ function drawBall(b){
   ctx.beginPath();
   ctx.arc(0,0,b.radius,0,Math.PI*2);
   ctx.fillStyle=b.color;
-  ctx.fill(); /* ← FIXED: BALL NOW VISIBLE */
+  ctx.fill();
 
   ctx.restore();
 }
