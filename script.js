@@ -1,4 +1,4 @@
-// Fluid Soccer — updated script.js with menus, pause, difficulty, color choices
+// Fluid Soccer — fixed ball + new lively colors
 (() => {
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d', { alpha: false });
@@ -29,9 +29,18 @@
   const aiColorChoices = document.getElementById('aiColorChoices');
   const difficultyChoices = document.getElementById('difficultyChoices');
 
+  /* NEW LIVELY PALETTE */
   const PALETTE = [
-    '#ffffff','#ffe163','#ff7a7a','#7ad1ff','#8aff9b',
-    '#ffd6a5','#c7b3ff','#ff9cf0','#b4d8a7','#f0f0a8'
+    '#FF4E50', // lively red
+    '#FC913A', // orange
+    '#F9D423', // yellow
+    '#EDE574', // lime yellow
+    '#4CB944', // bright green
+    '#2CBAE8', // sky blue
+    '#4A6CFF', // vivid blue
+    '#A657F5', // purple
+    '#FF6EC7', // hot pink
+    '#FF3CAC'  // neon magenta
   ];
 
   /* Game State */
@@ -43,7 +52,6 @@
   window.addEventListener('resize', updateWH);
 
   const settings = {
-    /* Slower movement & ball */
     playerRadius: 16,
     playerMaxSpeed: 240,
     playerAccel: 1600,
@@ -250,22 +258,28 @@
     ctx.restore();
   }
 
+  /* FIXED BALL DRAW */
   function drawBall(b){
     ctx.save();
     ctx.translate(b.pos.x,b.pos.y);
 
+    // shadow
     ctx.beginPath();
     ctx.ellipse(4,b.radius+6,b.radius*1.2,b.radius*0.5,0,0,Math.PI*2);
     ctx.fillStyle='rgba(0,0,0,0.26)';
     ctx.fill();
 
+    // main circle (FIXED)
     ctx.beginPath();
     ctx.arc(0,0,b.radius,0,Math.PI*2);
     ctx.fillStyle=b.color;
+    ctx.fill();
 
+    // highlight (FIXED)
     ctx.beginPath();
     ctx.arc(-b.radius*0.4,-b.radius*0.4,b.radius*0.5,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,0.12)';
+    ctx.fill();
 
     ctx.restore();
   }
@@ -355,7 +369,6 @@
   }
 
   function update(dt){
-    // cooldowns
     state.players.forEach(p => { p.kickCooldown = Math.max(0,p.kickCooldown-dt); });
 
     // PLAYER INPUT
@@ -400,7 +413,6 @@
 
     runAI(state.players[1], dt);
 
-    // integrate players
     state.players.forEach(p => {
       p.pos.x += p.vel.x * dt;
       p.pos.y += p.vel.y * dt;
@@ -456,7 +468,6 @@
       b.vel.y *= -0.78;
     }
 
-    // collisions
     resolveCircleCollision(state.players[0], state.players[1]);
     state.players.forEach(p=>{
       resolveCircleCollision(p, b);
@@ -528,12 +539,11 @@
     pauseMenu.classList.add('hidden');
   }
 
-  /* Difficulty Presets (IMPROVED — easy is much easier now) */
+  /* Difficulty Presets */
   function applyDifficulty(diff){
     selectedDifficulty = diff;
 
     if(diff === 'easy'){
-      // AI very weak, slow, errors often
       settings.aiSkill = 0.35;
       settings.playerMaxSpeed = 260;
       settings.playerAccel = 1500;
