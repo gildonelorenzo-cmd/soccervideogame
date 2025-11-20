@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fluid Soccer</title>
+<title>Fluid Soccer (Fixed)</title>
 
 <style>
 /* ======== GLOBAL ======== */
@@ -35,9 +35,7 @@ body {
   z-index: 10;
 }
 
-.hidden {
-  display: none !important;
-}
+.hidden { display: none !important; }
 
 .bigBtn {
   padding: 14px 30px;
@@ -151,52 +149,57 @@ body {
 
 <script>
 /* ============================================================
-   FLUID SOCCER JS — SINGLE-FILE VERSION
+   FIXED FLUID SOCCER
    ============================================================ */
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d', { alpha: false });
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d", { alpha: false });
 
-function resize() {
+/* ❗ FIX #1 — Proper canvas sizing */
+function resizeCanvas() {
   const ratio = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  canvas.width = Math.floor(rect.width * ratio);
-  canvas.height = Math.floor(rect.height * ratio);
+
+  canvas.width = rect.width * ratio;
+  canvas.height = rect.height * ratio;
+
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+  W = rect.width;
+  H = rect.height;
 }
-window.addEventListener('resize', resize);
-resize();
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
 
-/* DOM REFS */
-const mainMenu = document.getElementById('mainMenu');
-const pauseMenu = document.getElementById('pauseMenu');
-const ui = document.getElementById('ui');
+let W = canvas.clientWidth;
+let H = canvas.clientHeight;
 
-const pauseBtn = document.getElementById('pauseBtn');
-const resumeBtn = document.getElementById('resumeBtn');
-const changeDifficultyBtn = document.getElementById('changeDifficultyBtn');
-const restartBtnUI = document.getElementById('restartBtn');
-const startMatchBtn = document.getElementById('startMatchBtn');
+/* DOM */
+const mainMenu = document.getElementById("mainMenu");
+const pauseMenu = document.getElementById("pauseMenu");
+const ui = document.getElementById("ui");
 
-const scoreP = document.getElementById('scoreP');
-const scoreAI = document.getElementById('scoreAI');
+const playerColorChoices = document.getElementById("playerColorChoices");
+const aiColorChoices = document.getElementById("aiColorChoices");
+const difficultyChoices = document.getElementById("difficultyChoices");
 
-const playerColorChoices = document.getElementById('playerColorChoices');
-const aiColorChoices = document.getElementById('aiColorChoices');
-const difficultyChoices = document.getElementById('difficultyChoices');
+const startMatchBtn = document.getElementById("startMatchBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const resumeBtn = document.getElementById("resumeBtn");
+const restartBtnUI = document.getElementById("restartBtn");
+const changeDifficultyBtn = document.getElementById("changeDifficultyBtn");
 
-/* BETTER 10-COLOR PALETTE */
+/* Colors */
 const PALETTE = [
   "#ff4d4d", "#ffb84d", "#ffe74d", "#7dff4d", "#4dffa6",
   "#4dffff", "#4da6ff", "#7d4dff", "#ff4dff", "#ff4da6"
 ];
 
-/* GAME VARIABLES */
-let W = canvas.clientWidth;
-let H = canvas.clientHeight;
+let selectedPlayerColor = PALETTE[0];
+let selectedAIColor = PALETTE[1];
+let selectedDifficulty = "medium";
 
-const field = { padding: 40 };
-
+/* Game State */
 const settings = {
   playerRadius: 16,
   ballRadius: 14,
@@ -206,95 +209,81 @@ const settings = {
 let state = {
   players: [],
   ball: null,
-  score: { p: 0, ai: 0 },
-  lastTime: null,
   paused: false,
-  inMenu: true
+  inMenu: true,
+  lastTime: null
 };
 
-/* VECTOR HELPERS */
+/* Helpers */
 const vec = (x=0,y=0)=>({x,y});
 const add = (a,b)=>({x:a.x+b.x,y:a.y+b.y});
-const mul = (a,s)=>({x:a.x*s,y:a.y*s});
 const sub = (a,b)=>({x:a.x-b.x,y:a.y-b.y});
-const len = a=>Math.hypot(a.x,a.y);
-const normalize = a=>{ let L=len(a)||1; return {x:a.x/L,y:a.y/L}; };
+const mul = (a,s)=>({x:a.x*s,y:a.y*s});
+const len = v=>Math.hypot(v.x,v.y);
+const norm = v=>mul(v, 1/(len(v)||1));
 
-/* MENU SELECTIONS */
-let selectedPlayerColor = PALETTE[0];
-let selectedAIColor = PALETTE[1];
-let selectedDifficulty = "medium";
-
-/* UI BUILDERS */
-function buildColorGrid(container, selected, onSelect) {
+/* Build color pickers */
+function buildColorGrid(container, selected, setter) {
   container.innerHTML = "";
-  PALETTE.forEach(c => {
-    const d = document.createElement("div");
-    d.className = "colorChoice" + (c === selected ? " selected" : "");
-    d.style.background = c;
-    d.addEventListener("click", () => { onSelect(c); updateGrids(); });
+  PALETTE.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="colorChoice"+(c===selected?" selected":"");
+    d.style.background=c;
+    d.onclick=()=>{ setter(c); updateGrids(); };
     container.appendChild(d);
   });
 }
 
 function updateGrids() {
-  [...playerColorChoices.children]
-    .forEach((el,i)=>el.classList.toggle("selected", PALETTE[i]===selectedPlayerColor));
-  [...aiColorChoices.children]
-    .forEach((el,i)=>el.classList.toggle("selected", PALETTE[i]===selectedAIColor));
-  [...difficultyChoices.querySelectorAll("button")]
-    .forEach(b => b.style.outline = (b.dataset.diff===selectedDifficulty) ? "3px solid white" : "none");
+  [...playerColorChoices.children].forEach((el,i)=>el.classList.toggle("selected", PALETTE[i]===selectedPlayerColor));
+  [...aiColorChoices.children].forEach((el,i)=>el.classList.toggle("selected", PALETTE[i]===selectedAIColor));
+  [...difficultyChoices.children].forEach(btn=>btn.style.outline = btn.dataset.diff===selectedDifficulty ? "3px solid white":"none");
 }
 
-buildColorGrid(playerColorChoices, selectedPlayerColor, c => selectedPlayerColor=c);
-buildColorGrid(aiColorChoices, selectedAIColor, c => selectedAIColor=c);
+buildColorGrid(playerColorChoices, selectedPlayerColor, c=>selectedPlayerColor=c);
+buildColorGrid(aiColorChoices, selectedAIColor, c=>selectedAIColor=c);
 updateGrids();
 
-/* ENTITIES */
-function createPlayer(x,y,type,color){
-  return {
-    type,
-    pos:vec(x,y),
-    vel:vec(0,0),
-    radius:settings.playerRadius,
-    color,
-    kickCooldown:0
-  };
-}
+/* ❗ FIX #2 — DIFFICULTY BUTTONS NOW WORK */
+difficultyChoices.querySelectorAll("button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    selectedDifficulty = btn.dataset.diff;
+    updateGrids();
+  });
+});
 
+/* Create players + ball */
+function createPlayer(x,y,color,type){
+  return { pos:vec(x,y), vel:vec(0,0), radius:16, color, type, kickCooldown:0 };
+}
 function createBall(x,y){
-  return { pos:vec(x,y), vel:vec(0,0), radius:settings.ballRadius, color:"#ffffff" };
+  return { pos:vec(x,y), vel:vec(0,0), radius:14, color:"#fff" };
 }
 
-function spawnEntities(){
-  const leftX = field.padding + settings.playerRadius*2;
-  const rightX = W - field.padding - settings.playerRadius*2;
-  const midY = H/2;
-
+function spawnEntities() {
   state.players = [
-    createPlayer(leftX, midY, "player", selectedPlayerColor),
-    createPlayer(rightX, midY, "ai", selectedAIColor)
+    createPlayer(60, H/2, selectedPlayerColor, "player"),
+    createPlayer(W-60, H/2, selectedAIColor, "ai")
   ];
-
   state.ball = createBall(W/2, H/2);
 }
 
-/* KICK */
-function attemptKick(player,ball){
+/* Kick */
+function attemptKick(player, ball){
   if(player.kickCooldown>0) return;
-  const dir = sub(ball.pos, player.pos);
-  if(len(dir) <= player.radius + ball.radius + 8){
-    ball.vel = add(ball.vel, mul(normalize(dir), settings.kickPower));
-    player.kickCooldown = 0.18;
+
+  const d = sub(ball.pos, player.pos);
+  if(len(d) <= player.radius + ball.radius + 8){
+    ball.vel = add(ball.vel, mul(norm(d), settings.kickPower));
+    player.kickCooldown = 0.15;
   }
 }
 
-/* DRAW */
+/* Draw */
 function drawPitch(){
   ctx.fillStyle="#1f7a4c";
   ctx.fillRect(0,0,W,H);
 }
-
 function drawPlayer(p){
   ctx.save();
   ctx.translate(p.pos.x, p.pos.y);
@@ -311,7 +300,6 @@ function drawPlayer(p){
 
   ctx.restore();
 }
-
 function drawBall(b){
   ctx.save();
   ctx.translate(b.pos.x, b.pos.y);
@@ -324,92 +312,86 @@ function drawBall(b){
   ctx.beginPath();
   ctx.arc(0,0,b.radius,0,Math.PI*2);
   ctx.fillStyle=b.color;
-  ctx.fill(); /* ← FIXED: BALL NOW VISIBLE */
+  ctx.fill(); /* FIXED */
 
   ctx.restore();
 }
 
-/* UPDATE */
+/* Update */
 function update(dt){
-  state.players.forEach(p => {
-    p.pos.x += p.vel.x*dt;
-    p.pos.y += p.vel.y*dt;
-    if(p.kickCooldown>0) p.kickCooldown -= dt;
+  const b = state.ball;
+
+  state.players.forEach(p=>{
+    if(p.kickCooldown>0) p.kickCooldown-=dt;
   });
 
-  state.ball.pos.x += state.ball.vel.x*dt;
-  state.ball.pos.y += state.ball.vel.y*dt;
-  state.ball.vel.x *= 0.995;
-  state.ball.vel.y *= 0.995;
+  b.pos.x += b.vel.x*dt;
+  b.pos.y += b.vel.y*dt;
+  b.vel.x *= 0.99;
+  b.vel.y *= 0.99;
 }
 
-/* RENDER */
+/* Render */
 function render(){
   ctx.clearRect(0,0,W,H);
   drawPitch();
-  drawPlayer(state.players[0]);
-  drawPlayer(state.players[1]);
+  state.players.forEach(drawPlayer);
   drawBall(state.ball);
 }
 
-/* LOOP */
-function step(t){
+/* Loop */
+function loop(t){
   if(!state.lastTime) state.lastTime=t;
-  let dt = (t-state.lastTime)/1000;
+  let dt=(t-state.lastTime)/1000;
   state.lastTime=t;
-  dt=Math.min(0.04,dt);
+  dt=Math.min(dt,0.03);
 
   if(!state.paused && !state.inMenu) update(dt);
   render();
 
-  requestAnimationFrame(step);
+  requestAnimationFrame(loop);
 }
 
-/* MENUS */
-function initMatch(){
-  spawnEntities();
-  ui.classList.remove("hidden");
-  mainMenu.classList.add("hidden");
-  pauseMenu.classList.add("hidden");
-  state.inMenu = false;
-  state.paused = false;
-}
-
-startMatchBtn.addEventListener("click", initMatch);
-
-pauseBtn.addEventListener("click", ()=>{
-  state.paused = true;
-  pauseMenu.classList.remove("hidden");
-});
-
-resumeBtn.addEventListener("click", ()=>{
-  state.paused=false;
-  pauseMenu.classList.add("hidden");
-});
-
-changeDifficultyBtn.addEventListener("click", ()=>{
-  mainMenu.classList.remove("hidden");
-  pauseMenu.classList.add("hidden");
-});
-
-restartBtnUI.addEventListener("click", ()=>{
-  spawnEntities();
-  state.score={p:0,ai:0};
-  state.paused=false;
-  pauseMenu.classList.add("hidden");
-});
-
-/* INPUT: CLICK → KICK */
+/* Clicking kicks ball */
 canvas.addEventListener("pointerdown", e=>{
   const b = state.ball;
-  const d = Math.hypot(b.pos.x-e.offsetX, b.pos.y-e.offsetY);
-  if(d <= b.radius+30) attemptKick(state.players[0],b);
+  if(len(sub(vec(e.offsetX,e.offsetY),b.pos)) <= b.radius+36)
+    attemptKick(state.players[0], b);
 });
 
-/* START LOOP */
-requestAnimationFrame(step);
+/* Menus */
+startMatchBtn.onclick=()=>{
+  spawnEntities();
+  mainMenu.classList.add("hidden");
+  ui.classList.remove("hidden");
+  state.inMenu=false;
+};
+
+pauseBtn.onclick=()=>{
+  state.paused=true;
+  pauseMenu.classList.remove("hidden");
+};
+
+resumeBtn.onclick=()=>{
+  state.paused=false;
+  pauseMenu.classList.add("hidden");
+};
+
+restartBtnUI.onclick=()=>{
+  spawnEntities();
+  state.paused=false;
+  pauseMenu.classList.add("hidden");
+};
+
+changeDifficultyBtn.onclick=()=>{
+  mainMenu.classList.remove("hidden");
+  pauseMenu.classList.add("hidden");
+  state.inMenu=true;
+};
+
+/* Start loop */
+requestAnimationFrame(loop);
 
 </script>
-
 </body>
 </html>
