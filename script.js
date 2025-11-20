@@ -1,53 +1,37 @@
 /* ============================================================
-   FLUID SOCCER JS — SEPARATED, FIXED VERSION
+   FLUID SOCCER - SPLIT VERSION
    ============================================================ */
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d', { alpha: false });
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");   // <-- FIXED: alpha TRUE
 
-/* GAME DIMENSIONS UPDATED ONLY BY RESIZE() */
-let W, H;
+/* DOM REFS */
+const mainMenu = document.getElementById("mainMenu");
+const pauseMenu = document.getElementById("pauseMenu");
+const ui = document.getElementById("ui");
 
-/* FIXED RESIZE FUNCTION */
-function resize() {
-  const ratio = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
+const pauseBtn = document.getElementById("pauseBtn");
+const resumeBtn = document.getElementById("resumeBtn");
+const changeDifficultyBtn = document.getElementById("changeDifficultyBtn");
+const restartBtnUI = document.getElementById("restartBtn");
+const startMatchBtn = document.getElementById("startMatchBtn");
 
-  canvas.width = Math.floor(rect.width * ratio);
-  canvas.height = Math.floor(rect.height * ratio);
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+const scoreP = document.getElementById("scoreP");
+const scoreAI = document.getElementById("scoreAI");
 
-  W = rect.width;
-  H = rect.height;
-}
-window.addEventListener('resize', resize);
-resize();
+const playerColorChoices = document.getElementById("playerColorChoices");
+const aiColorChoices = document.getElementById("aiColorChoices");
+const difficultyChoices = document.getElementById("difficultyChoices");
 
-/* DOM ELEMENTS */
-const mainMenu = document.getElementById('mainMenu');
-const pauseMenu = document.getElementById('pauseMenu');
-const ui = document.getElementById('ui');
-
-const pauseBtn = document.getElementById('pauseBtn');
-const resumeBtn = document.getElementById('resumeBtn');
-const changeDifficultyBtn = document.getElementById('changeDifficultyBtn');
-const restartBtnUI = document.getElementById('restartBtn');
-const startMatchBtn = document.getElementById('startMatchBtn');
-
-const scoreP = document.getElementById('scoreP');
-const scoreAI = document.getElementById('scoreAI');
-
-const playerColorChoices = document.getElementById('playerColorChoices');
-const aiColorChoices = document.getElementById('aiColorChoices');
-const difficultyChoices = document.getElementById('difficultyChoices');
-
-/* COLOR PALETTE */
+/* COLORS */
 const PALETTE = [
   "#ff4d4d", "#ffb84d", "#ffe74d", "#7dff4d", "#4dffa6",
   "#4dffff", "#4da6ff", "#7d4dff", "#ff4dff", "#ff4da6"
 ];
 
-/* GAME SETTINGS */
+/* GAME VARIABLES */
+let W, H;  // <-- FIXED
+
 const field = { padding: 40 };
 
 const settings = {
@@ -78,15 +62,31 @@ let selectedPlayerColor = PALETTE[0];
 let selectedAIColor = PALETTE[1];
 let selectedDifficulty = "medium";
 
-/* UI BUILDERS */
+/* ======== RESIZE ======== */
+function resize() {
+  const ratio = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.floor(rect.width * ratio);
+  canvas.height = Math.floor(rect.height * ratio);
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  W = rect.width;
+  H = rect.height;
+}
+window.addEventListener("resize", resize);
+resize();
+
+/* ======== UI BUILD ======== */
 function buildColorGrid(container, selected, onSelect) {
   container.innerHTML = "";
   PALETTE.forEach(c => {
-    const d = document.createElement("div");
-    d.className = "colorChoice" + (c === selected ? "selected" : "");
-    d.style.background = c;
-    d.addEventListener("click", () => { onSelect(c); updateGrids(); });
-    container.appendChild(d);
+    const div = document.createElement("div");
+    div.className = "colorChoice" + (c === selected ? " selected" : "");
+    div.style.background = c;
+    div.addEventListener("click", () => {
+      onSelect(c);
+      updateGrids();
+    });
+    container.appendChild(div);
   });
 }
 
@@ -98,16 +98,25 @@ function updateGrids() {
     .forEach((el,i)=>el.classList.toggle("selected", PALETTE[i]===selectedAIColor));
 
   [...difficultyChoices.querySelectorAll("button")]
-    .forEach(b => b.style.outline =
-      (b.dataset.diff===selectedDifficulty) ? "3px solid white" : "none"
+    .forEach(btn => btn.style.outline =
+        (btn.dataset.diff === selectedDifficulty) ? "3px solid white" : "none"
     );
 }
 
+/* INITIAL COLOR GRIDS */
 buildColorGrid(playerColorChoices, selectedPlayerColor, c => selectedPlayerColor=c);
 buildColorGrid(aiColorChoices, selectedAIColor, c => selectedAIColor=c);
 updateGrids();
 
-/* ENTITIES */
+/* ======== FIXED — DIFFICULTY BUTTON LOGIC ======== */
+difficultyChoices.querySelectorAll("button").forEach(button => {
+  button.addEventListener("click", () => {
+    selectedDifficulty = button.dataset.diff;
+    updateGrids();
+  });
+});
+
+/* ======== ENTITIES ======== */
 function createPlayer(x,y,type,color){
   return {
     type,
@@ -136,9 +145,9 @@ function spawnEntities(){
   state.ball = createBall(W/2, H/2);
 }
 
-/* KICK LOGIC */
-function attemptKick(player,ball){
-  if(player.kickCooldown>0) return;
+/* ======== KICK ======== */
+function attemptKick(player, ball){
+  if(player.kickCooldown > 0) return;
   const dir = sub(ball.pos, player.pos);
   if(len(dir) <= player.radius + ball.radius + 8){
     ball.vel = add(ball.vel, mul(normalize(dir), settings.kickPower));
@@ -146,9 +155,9 @@ function attemptKick(player,ball){
   }
 }
 
-/* DRAWING */
+/* ======== DRAW ======== */
 function drawPitch(){
-  ctx.fillStyle="#1f7a4c";
+  ctx.fillStyle = "#1f7a4c";
   ctx.fillRect(0,0,W,H);
 }
 
@@ -158,12 +167,12 @@ function drawPlayer(p){
 
   ctx.beginPath();
   ctx.ellipse(0,p.radius+8,p.radius*1.2,p.radius*0.5,0,0,Math.PI*2);
-  ctx.fillStyle="rgba(0,0,0,0.22)";
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
   ctx.fill();
 
   ctx.beginPath();
   ctx.arc(0,0,p.radius,0,Math.PI*2);
-  ctx.fillStyle=p.color;
+  ctx.fillStyle = p.color;
   ctx.fill();
 
   ctx.restore();
@@ -175,32 +184,33 @@ function drawBall(b){
 
   ctx.beginPath();
   ctx.ellipse(4,b.radius+6,b.radius*1.2,b.radius*0.5,0,0,Math.PI*2);
-  ctx.fillStyle='rgba(0,0,0,0.26)';
+  ctx.fillStyle = "rgba(0,0,0,0.26)";
   ctx.fill();
 
   ctx.beginPath();
   ctx.arc(0,0,b.radius,0,Math.PI*2);
-  ctx.fillStyle=b.color;
+  ctx.fillStyle = b.color;
   ctx.fill();
 
   ctx.restore();
 }
 
-/* UPDATE LOOP */
+/* ======== UPDATE ======== */
 function update(dt){
   state.players.forEach(p => {
-    p.pos.x += p.vel.x*dt;
-    p.pos.y += p.vel.y*dt;
+    p.pos.x += p.vel.x * dt;
+    p.pos.y += p.vel.y * dt;
     if(p.kickCooldown>0) p.kickCooldown -= dt;
   });
 
-  state.ball.pos.x += state.ball.vel.x*dt;
-  state.ball.pos.y += state.ball.vel.y*dt;
+  state.ball.pos.x += state.ball.vel.x * dt;
+  state.ball.pos.y += state.ball.vel.y * dt;
+
   state.ball.vel.x *= 0.995;
   state.ball.vel.y *= 0.995;
 }
 
-/* RENDER */
+/* ======== RENDER ======== */
 function render(){
   ctx.clearRect(0,0,W,H);
   drawPitch();
@@ -209,20 +219,21 @@ function render(){
   drawBall(state.ball);
 }
 
-/* MAIN LOOP */
+/* ======== LOOP ======== */
 function step(t){
   if(!state.lastTime) state.lastTime=t;
-  let dt = (t-state.lastTime)/1000;
+
+  let dt=(t-state.lastTime)/1000;
   state.lastTime=t;
   dt=Math.min(0.04,dt);
 
   if(!state.paused && !state.inMenu) update(dt);
   render();
-
   requestAnimationFrame(step);
 }
+requestAnimationFrame(step);
 
-/* MENU ACTIONS */
+/* ======== MENUS ======== */
 function initMatch(){
   spawnEntities();
   ui.classList.remove("hidden");
@@ -256,14 +267,9 @@ restartBtnUI.addEventListener("click", ()=>{
   pauseMenu.classList.add("hidden");
 });
 
-/* INPUT: CLICK → KICK */
+/* ======== INPUT ======== */
 canvas.addEventListener("pointerdown", e=>{
   const b = state.ball;
   const d = Math.hypot(b.pos.x-e.offsetX, b.pos.y-e.offsetY);
-  if(d <= b.radius+30) attemptKick(state.players[0],b);
+  if(d <= b.radius+30) attemptKick(state.players[0], b);
 });
-
-/* START GAME LOOP */
-requestAnimationFrame(step);
-
-
